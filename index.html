@@ -226,4 +226,46 @@ function renderQuestion(){const q=currentQuestion;if(!q)return;document.getEleme
 function selectAnswer(choice){if(chosenText!==null||!currentQuestion)return;chosenText=choice;const ids=new Set(saved.answeredIds||[]);if(!ids.has(currentQuestion.id)){ids.add(currentQuestion.id);saved.answeredIds=[...ids];saved.total=(saved.total||0)+1;if(choice===currentQuestion.correctText)saved.correct=(saved.correct||0)+1;saveProgress()}renderQuestion()}
 function nextQuestion(){if(!currentQuestion){backToLesson();return}if(chosenText===null){const fb=document.getElementById('feedback');fb.className='feedback show bad';fb.textContent='Choose an answer first so you can read the explanation. 💡';return}loadNextQuestion()}
 renderScopes();
+
+</script>
+<script>
+/* Scope navigation safety net: keeps the category menu visible even if another
+   part of the reviewer script encounters an error. */
+(function(){
+  const grid=document.getElementById('scopeGrid');
+  if(!grid || grid.children.length) return;
+  const groups=[
+    {name:'Verbal Ability',icon:'📚',topics:['Word Meaning','Sentence Completion','Error Recognition','Sentence Structure','Paragraph Organization','Reading Comprehension']},
+    {name:'Numerical Ability',icon:'🔢',topics:['Basic Operations','Fractions','Decimals','Percentages','Ratio and Proportion','Averages','Number Sequences','Algebra','Age Problems','Simple Interest','Speed, Distance, and Time','Mixed Word Problems']},
+    {name:'Analytical Ability',icon:'🧠',topics:['Word Analogy','Symbolic Logic','Abstract Reasoning and Patterns','Identifying Assumptions','Drawing Conclusions','Logical Arguments and Syllogisms','Data Interpretation']},
+    {name:'General Information',icon:'🇵🇭',topics:['Constitutional Principles and State Structure','Bill of Rights','Citizenship and Suffrage','Branches of Government and Local Government','RA 6713: Norms of Conduct','Public Accountability and Conflicts of Interest','Disclosure and Prohibited Acts','Fundamental Human Rights','Peace, Equality, and Human Dignity','Pollution and Waste Management','Natural Resources and Biodiversity','Environmental Laws and Sustainability']}
+  ];
+  grid.innerHTML='';
+  groups.forEach(group=>{
+    const card=document.createElement('div');card.className='scope-card';
+    const toggle=document.createElement('button');toggle.type='button';toggle.className='scope-toggle';
+    toggle.setAttribute('aria-expanded','false');
+    toggle.innerHTML='<span>'+group.icon+' '+group.name+'</span><span class="arrow" aria-hidden="true">⌄</span>';
+    const list=document.createElement('div');list.className='scope-list';
+    const inner=document.createElement('div');inner.className='scope-list-inner';
+    group.topics.forEach(topic=>{
+      const b=document.createElement('button');b.type='button';b.className='scope-btn';b.textContent=topic;
+      b.addEventListener('click',()=>{
+        if(typeof window.selectSubtopic==='function'){window.selectSubtopic(group.name,topic);return;}
+        const lesson=document.getElementById('lessonView');
+        if(lesson){lesson.classList.remove('hidden');lesson.innerHTML='';
+          const tag=document.createElement('span');tag.className='tag';tag.textContent=group.name;
+          const title=document.createElement('h2');title.textContent='📖 '+topic;
+          const p=document.createElement('p');p.textContent='This subtopic is selected. Please refresh the page once the reviewer finishes loading to access its lesson and practice questions.';
+          lesson.append(tag,title,p);lesson.scrollIntoView({behavior:'smooth',block:'start'});}
+      });
+      inner.appendChild(b);
+    });
+    list.appendChild(inner);
+    toggle.addEventListener('click',()=>{
+      const open=list.classList.toggle('open');toggle.setAttribute('aria-expanded',String(open));
+    });
+    card.append(toggle,list);grid.appendChild(card);
+  });
+})();
 </script></body></html>
